@@ -16,14 +16,15 @@ CLIENT_ID = 'r5XNhCeSKGkBZ8ihe01JXz1uCJfaStGYSXaH4Xpw'
 CLIENT_SECRET = 'ZSMW6QxhtCUPhpLFV6QOzQkKW3rrFs7SSZL8R26uUDxdZN1VAmf6KhXG9jkgea2QZS3FMH7MHc72Y2tH8moHK4UprlNnQm0vfzVSHuo2avPE6yuvk698EqxnYPEFnOYf'
 REDIRECT_URL = 'http://localhost:8001/auth_client/auth_callback'
 
-
-def auth_via_provider(request, *args, **kwargs):
-    code_verifier = ''.join(
+# should be new for each session, stored here for quickness
+CODE_VERIFIER = ''.join(
         random.choice(string.ascii_uppercase + string.digits) for _ in range(random.randint(43, 128)))
 
-    print(code_verifier)
 
-    code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+# это вью для кнопки "авторизоваться через oauth"
+def auth_via_provider(request, *args, **kwargs):
+
+    code_challenge = hashlib.sha256(CODE_VERIFIER.encode('utf-8')).digest()
     code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8').replace('=', '')
 
     # todo сохранить verifier и challenge в какую-то oauth сессию
@@ -34,6 +35,7 @@ def auth_via_provider(request, *args, **kwargs):
     return redirect(to=auth_url)
 
 
+# callback, который ловит токен и сеттит его в браузер
 def auth_callback(request, *args, **kwargs):
     print(request.GET)
     code = request.GET.get('code')
@@ -43,7 +45,7 @@ def auth_callback(request, *args, **kwargs):
     data = {
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET,
-        'code_verifier': '21ROLG20SYP7H2YRW15G5I3PJ4IEK0SATFNQWH3D4D05AEYGU8Y4LY3NO5H8AWHRC7J5V3OQJHW6L3N99FWTQLT6YA5DF0LO7VWEGLRAUHS7OKTRO', # store somewhere code verifier
+        'code_verifier': CODE_VERIFIER,
         'redirect_uri': REDIRECT_URL,
         'grant_type': 'authorization_code',
         'code': code,
@@ -55,4 +57,5 @@ def auth_callback(request, *args, **kwargs):
     )
     print(response)
     print(response.text)
-    return HttpResponse('STUB', status=200)
+    access_token = response.json().get('access_token')
+    return HttpResponse(f'access token should be set to frontend storage {access_token}', status=200)

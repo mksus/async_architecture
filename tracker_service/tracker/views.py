@@ -5,6 +5,8 @@ import json
 from tracker.models import create_new_task, reassign_tasks as reassign_task_logic, complete_task as complete_task_logic
 
 
+# todo нужно будет переделать на generics и заюзать PermissionClass из django-oauth-toolkit. Не разобрался до конца.
+
 @csrf_exempt
 def create_task(request, *args, **kwargs):
     data = request.POST
