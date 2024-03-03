@@ -33,7 +33,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 CORS_ORIGIN_ALLOW_ALL = True
-AUTH_USER_MODEL = 'tracker.User'
+AUTH_USER_MODEL = 'auth_client.User'
 
 # Application definition
 
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tracker',
+    'auth_client',
     'oauth2_provider',
     'corsheaders',
 ]

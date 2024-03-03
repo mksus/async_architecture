@@ -14,7 +14,7 @@ import requests
 
 CLIENT_ID = 'r5XNhCeSKGkBZ8ihe01JXz1uCJfaStGYSXaH4Xpw'
 CLIENT_SECRET = 'ZSMW6QxhtCUPhpLFV6QOzQkKW3rrFs7SSZL8R26uUDxdZN1VAmf6KhXG9jkgea2QZS3FMH7MHc72Y2tH8moHK4UprlNnQm0vfzVSHuo2avPE6yuvk698EqxnYPEFnOYf'
-REDIRECT_URL = 'http://localhost:8001/auth/auth_callback'
+REDIRECT_URL = 'http://localhost:8001/auth_client/auth_callback'
 
 
 def auth_via_provider(request, *args, **kwargs):
