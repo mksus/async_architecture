@@ -25,3 +25,17 @@ def create_new_task(description=None):
     # assignee = User.objects.get(id=1)  # todo поменять на рандомного
     new_task = Task.objects.create(description=description, fee=fee, reward=reward)
     new_task.save()
+
+
+def reassign_tasks():
+    open_tasks = Task.objects.filter(status=Task.Status.open)
+    for task in open_tasks:
+        print(f'call assign task {task.id}')
+
+
+def complete_task(task_id, user_id):
+    task = Task.objects.get(id=task_id)  # тут может упасть, если такси нет
+    if not task.assignee_id or task.assignee_id != user_id:
+        raise 'wrong user'
+    task.status = Task.Status.complete
+    task.save()
