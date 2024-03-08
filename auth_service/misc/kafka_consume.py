@@ -1,5 +1,5 @@
 from kafka import KafkaConsumer
-consumer = KafkaConsumer('my-topic',
+consumer = KafkaConsumer('accounts_stream',
                          bootstrap_servers=['localhost:9092'])
 
 for message in consumer:

@@ -14,35 +14,38 @@ ACCOUNTS_STREAM = 'accounts_stream'
 ACCOUNTS = 'accounts'
 
 
-def serialize_account_created(data):
-    return {
+def dispatch_account_created(user):
+    event = {
             "event_name": "AccountCreated",
             "data": {
-                "email": data.get("email"),
-                "role": data.get("role"),
-                "first_name": data.get("first_name"),
-                "last_name": data.get("last_name"),
-                "username": data.get("username"),
+                "email": user.email,
+                "role": user.role,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "username": user.username,
             },
         }
+    producer.send(ACCOUNTS_STREAM, event)
 
 
-def serialize_role_changed(data):
-    return {
+def dispatch_role_changed(user):
+    event = {
                 "event_name": "AccountRoleChanged",
                 "data": {
-                    "username": data.get("username"),
-                    "role": data.get("role"),
+                    "username": user.username,
+                    "role": user.role,
                 },
             }
+    producer.send(ACCOUNTS, event)
 
 
-def serialize_account_changed(data):
-    return {
+def dispatch_account_changed(user):
+    event = {
         "event_name": "AccountChanged",
         "data": {
-            "username": data.get("username"),
-            "first_name": data.get("first_name"),
-            "last_name": data.get("last_name"),
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
         },
     }
+    producer.send(ACCOUNTS_STREAM, event)
