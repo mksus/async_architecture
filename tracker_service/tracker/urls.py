@@ -1,10 +1,9 @@
 from django.urls import path, include
-from .views import create_task, reassign_tasks, complete_task
+from .views import CreateTaskView, MyTasksView, CompleteTaskView, ReassignTasksView
 
-
-# клиентское приложение
 urlpatterns = [
-    path("create_task/", create_task, name='create_task'),
-    path("reassign_tasks/", reassign_tasks, name='reassign_tasks'),
-    path("complete_task/", complete_task, name='complete_task'),
+    path("create/", CreateTaskView.as_view(), name="create_task"),
+    path("my_tasks/", MyTasksView.as_view(), name="get_my_tasks"),
+    path("reassign/", ReassignTasksView.as_view(), name="reassign_tasks"),
+    path("complete/", CompleteTaskView.as_view(), name="complete_task"),
 ]
