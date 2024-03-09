@@ -1,7 +1,9 @@
 import json
 
 from kafka import KafkaProducer
-from kafka.errors import KafkaError
+import event_schema_registry.schemas.auth_service.AccountCreated as reg
+import jsonschema
+from datetime import datetime
 
 producer = KafkaProducer(
     bootstrap_servers=['localhost:9092'],
@@ -17,6 +19,9 @@ ACCOUNTS = 'accounts'
 def dispatch_account_created(user):
     event = {
             "event_name": "AccountCreated",
+            "event_version": "1",
+            "event_time": str(datetime.now()),
+            "producer": "auth_server",
             "data": {
                 "email": user.email,
                 "role": user.role,
@@ -25,6 +30,7 @@ def dispatch_account_created(user):
                 "username": user.username,
             },
         }
+    jsonschema.validate(event, reg.v1)
     producer.send(ACCOUNTS_STREAM, event)
 
 
