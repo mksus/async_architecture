@@ -1,33 +1,81 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from tracker.models import create_new_task, reassign_tasks as reassign_task_logic, complete_task as complete_task_logic
+from rest_framework import generics, serializers, views
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from tracker.models import Task
+from auth_client.models import User
+import random
 
 
-# todo нужно будет переделать на generics и заюзать PermissionClass из django-oauth-toolkit. Не разобрался до конца.
+class TaskSerializer(serializers.ModelSerializer):
+    assignee = serializers.CharField(required=False)
 
-@csrf_exempt
-def create_task(request, *args, **kwargs):
-    data = request.POST
-    task_data = json.loads(request.body.decode('utf-8'))
-    create_new_task(description=task_data.get('description'))
-    return HttpResponse('ok', status=200)
+    class Meta:
+        model = Task
+        fields = ("description", "status", "assignee")
 
 
-# todo ограничить права
-@csrf_exempt
-def reassign_tasks(request, *args, **kwargs):
-    data = request.POST
-    reassign_task_logic()
-    return HttpResponse('ok', status=200)
+class CreateTaskView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+    def perform_create(self, serializer):
+        assignee_queryset = User.objects.exclude(
+                role__in=[User.Role.manager.value, User.Role.admin.value]
+            )
+        if assignee_queryset.exists():
+            total_assignees = assignee_queryset.count()
+            random_index = random.randint(0, total_assignees - 1)
+            assignee = assignee_queryset[random_index]
+            serializer.validated_data["assignee"] = assignee
+        serializer.validated_data["fee"] = random.randint(10, 20)
+        serializer.validated_data["reward"] = random.randint(20, 40)
+        serializer.save()
 
 
-@csrf_exempt
-def complete_task(request, *args, **kwargs):
-    data = request.POST
-    task_data = json.loads(request.body.decode('utf-8'))
-    task_id = task_data.get('task_id')
-    print(task_id, request.user.id)
-    complete_task_logic(task_id=task_id, user_id=request.user.id)
-    return HttpResponse('ok', status=200)
+class ReassignTasksView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        opened_tasks = Task.objects.filter(status=Task.Status.open.value)
+        for task in opened_tasks:
+            assignee_queryset = User.objects.exclude(
+                role__in=[User.Role.manager.value, User.Role.admin.value]
+            )
+
+            if assignee_queryset.exists():
+                total_assignees = assignee_queryset.count()
+                random_index = random.randint(0, total_assignees - 1)
+                assignee = assignee_queryset[random_index]
+                task.assignee = assignee
+                task.save()
+
+        serializer = TaskSerializer(opened_tasks, many=True)
+        return Response(serializer.data)
+
+
+class CompleteTaskView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        task_id = request.data.get("task_id")
+        try:
+            task = Task.objects.get(id=task_id)
+        except Task.DoesNotExist:
+            return Response("Does not exist", status=404)
+
+        if task.assignee != request.user:
+            return Response("Can complete only owned tasks", status=403)
+
+        task.status = Task.Status.complete.value
+        task.save(update_fields=["status"])
+        return Response(status=200, data="ok")
+
+
+class MyTasksView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Task.objects.filter(assignee=user)

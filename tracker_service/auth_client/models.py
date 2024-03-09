@@ -1,8 +1,15 @@
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+from djchoices import ChoiceItem, DjangoChoices
 
 
 class User(AbstractUser):
-    pass
+    class Role(DjangoChoices):
+        admin = ChoiceItem('admin')
+        manager = ChoiceItem('manager')
+        accountant = ChoiceItem('accountant')
+        dev = ChoiceItem('dev')
 
+    role = models.CharField(choices=Role.choices, max_length=128, default=Role.dev)
+    email = models.EmailField()
 
-# todo добавить role, public_id, заполнять их в kafka consumer

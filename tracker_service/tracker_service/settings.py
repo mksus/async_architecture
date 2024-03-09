@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'auth_client',
     'oauth2_provider',
     'corsheaders',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'oauth2_provider.middleware.OAuth2TokenMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'tracker_service.urls'
@@ -92,6 +93,17 @@ DATABASES = {
     }
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
+
+OAUTH2_PROVIDER = {
+    'RESOURCE_SERVER_INTROSPECTION_URL': 'http://localhost:8000/o/introspect/',
+    'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('r5XNhCeSKGkBZ8ihe01JXz1uCJfaStGYSXaH4Xpw', 'ZSMW6QxhtCUPhpLFV6QOzQkKW3rrFs7SSZL8R26uUDxdZN1VAmf6KhXG9jkgea2QZS3FMH7MHc72Y2tH8moHK4UprlNnQm0vfzVSHuo2avPE6yuvk698EqxnYPEFnOYf'),
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -133,3 +145,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CORS_ORIGIN_ALLOW_ALL = True
+AUTH_USER_MODEL = 'auth_client.User'
