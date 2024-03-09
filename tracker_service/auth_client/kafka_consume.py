@@ -25,7 +25,12 @@ def run():
 
         # CUD events
         if event_name == "AccountCreated":
-            User.objects.create(**message.value["data"])
+            try:
+                u = User.objects.create(**message.value["data"])
+                print(u)
+                u.save()
+            except Exception as e:
+                print(e)
 
         elif event_name == "AccountChanged":
             username = data["username"]
