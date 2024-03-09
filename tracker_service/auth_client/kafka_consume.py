@@ -3,6 +3,9 @@ def run():
     import json
     from auth_client.models import User
 
+    import event_schema_registry.schemas.auth_service.AccountCreated as account_created_registry
+    import jsonschema
+
     ACCOUNTS_STREAM = 'accounts_stream'
     ACCOUNTS = 'accounts'
 
@@ -26,7 +29,8 @@ def run():
         # CUD events
         if event_name == "AccountCreated":
             try:
-                u = User.objects.create(**message.value["data"])
+                jsonschema.validate(value, account_created_registry.v1)
+                u = User.objects.create(**data)
                 print(u)
                 u.save()
             except Exception as e:
