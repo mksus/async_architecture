@@ -12,9 +12,9 @@ import requests
 
 # Create your views here.
 
-CLIENT_ID = 'r5XNhCeSKGkBZ8ihe01JXz1uCJfaStGYSXaH4Xpw'
-CLIENT_SECRET = 'ZSMW6QxhtCUPhpLFV6QOzQkKW3rrFs7SSZL8R26uUDxdZN1VAmf6KhXG9jkgea2QZS3FMH7MHc72Y2tH8moHK4UprlNnQm0vfzVSHuo2avPE6yuvk698EqxnYPEFnOYf'
-REDIRECT_URL = 'http://localhost:8001/auth_client/auth_callback'
+CLIENT_ID = '7lAOlZNDi3LegSqIKUku2vIAXweRsCNqn3Z4nTbX'
+CLIENT_SECRET = 'QNXmRUbC9BR2FpuVSGFoCYYeaRGD1bMWXA5BAeS9PJoeOMPItu2DPMCYhBpFef0DGQluwlM2HUupxuSZaHlv9LWVel7qZtn5T5TKSidUC8LhzkI2iLB0mjJ7lmiDNCfX'
+REDIRECT_URL = 'http://localhost:8002/auth_client/auth_callback'
 
 # should be new for each session, stored here for quickness
 CODE_VERIFIER = ''.join(
