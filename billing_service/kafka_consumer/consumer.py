@@ -96,8 +96,8 @@ def run():
 
                 # jira_id - validated in schema
                 # additional validation for description
-                if data['description'].contains('['):
-                    raise 'description contains invalid symbol'
+                if '[' in data['description']:
+                    raise Exception('description contains invalid symbol')
 
                 assignee = User.objects.get(username=data['assignee_username'])
                 u = Task.objects.create(
