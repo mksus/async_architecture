@@ -27,7 +27,12 @@ def run():
 
     for message in consumer:
         value = message.value
-        event_name = value["event_name"]
+
+        #  по-хорошему, любые манипуляции с полями должны быть под try-except,
+        #  пока не хватает сил/времени на переделку, считаем, что все события их содержат
+
+        event_name = value.get("event_name")
+        event_version = value.get("event_version")
         data = value["data"]
         print("Received message: {}".format(value))
 
@@ -69,9 +74,31 @@ def run():
             except User.DoesNotExist:
                 User.objects.create(**message.value["data"])
 
-        elif event_name == "TaskCreated":
+        elif event_name == "TaskCreated" and event_version == 1:
+            print('TaskCreated v1')
             try:
                 jsonschema.validate(value, TaskCreated.v1)
+                assignee = User.objects.get(username=data['assignee_username'])
+                u = Task.objects.create(
+                    description=data['descriptions'],
+                    status=data['status'],
+                    assignee=assignee,
+                )
+                print(u)
+                u.save()
+            except Exception as e:
+                print(e)
+
+        elif event_name == "TaskCreated" and event_version == 2:
+            try:
+                print('TaskCreated v2')
+                jsonschema.validate(value, TaskCreated.v2)
+
+                # jira_id - validated in schema
+                # additional validation for description
+                if data['description'].contains('['):
+                    raise 'description contains invalid symbol'
+
                 assignee = User.objects.get(username=data['assignee_username'])
                 u = Task.objects.create(
                     description=data['descriptions'],
