@@ -15,6 +15,6 @@ v1 = {
                 "assignee_username": { "type": "string" },
                 "status": { "type": "string" },
             }
-        },
+        }
     }
 }
