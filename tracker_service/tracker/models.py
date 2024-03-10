@@ -28,6 +28,6 @@ def task_events(sender, instance, **kwargs):
     if created:
         dispatch_task_created(instance)
     else:
-        previous = User.objects.get(id=instance.id)
+        previous = Task.objects.get(id=instance.id)
         if previous.status != Task.Status.complete and instance.status == Task.Status.complete:
             dispatch_task_completed(instance)

@@ -100,13 +100,14 @@ def run():
                     raise Exception('description contains invalid symbol')
 
                 assignee = User.objects.get(username=data['assignee_username'])
-                u = Task.objects.create(
-                    description=data['descriptions'],
+                t = Task.objects.create(
+                    public_id=data['public_id'],
+                    description=data['description'],
                     status=data['status'],
                     assignee=assignee,
                 )
-                print(u)
-                u.save()
+                print(t)
+                t.save()
             except Exception as e:
                 print(e)
 
