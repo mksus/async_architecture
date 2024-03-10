@@ -2,10 +2,11 @@ def run():
     from kafka import KafkaConsumer
     import json
     from auth_client.models import User
-    from billing.models import Task
+    from billing.models import Task, Transaction
 
     import event_schema_registry.schemas.auth_service.AccountCreated as account_created_registry
     from event_schema_registry.schemas.auth_service import AccountCreated, AccountUpdated, AccountRoleChanged
+    from event_schema_registry.schemas.tracker_service import TaskCreated, TaskCompleted
     import jsonschema
 
     ACCOUNTS_STREAM = 'accounts_stream'
@@ -70,7 +71,7 @@ def run():
 
         elif event_name == "TaskCreated":
             try:
-                # jsonschema.validate(value, account_created_registry.v1)
+                jsonschema.validate(value, TaskCreated.v1)
                 assignee = User.objects.get(username=data['assignee_username'])
                 u = Task.objects.create(
                     description=data['descriptions'],
@@ -81,5 +82,32 @@ def run():
                 u.save()
             except Exception as e:
                 print(e)
+
+        elif event_name == "TaskCompleted":
+            try:
+                jsonschema.validate(value, TaskCompleted.v1)
+                task = Task.objects.get(public_id=data['public_id'])
+
+                # start transaction
+                # draft
+                task.status = Task.Status.complete
+                task.save()
+
+                # Transaction.objects.create(description=f'')
+                # User.get(assignee_username)
+
+                # User.update_balance()
+
+                # commit transaction
+
+            except Exception as e:
+                print(e)
+                # store exceptions to special database model
+                # - exception_name
+                # - exception_text
+                # - event_data{}
+
+                # raise alert / send to sentry
+                # дальше можно разбирать вручную, что не учли
 
 run()

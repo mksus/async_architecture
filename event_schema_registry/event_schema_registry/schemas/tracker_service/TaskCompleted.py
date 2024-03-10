@@ -1,6 +1,6 @@
 v1 = {
-    "title": "TaskUpdated",
-    "description": "CUD",
+    "title": "TaskCompleted",
+    "description": "BE",
     "type": "object",
     "properties": {
         "event_name": { "type": "string" },
@@ -11,9 +11,6 @@ v1 = {
             "type": "object",
             "properties": {
                 "public_id": { "type": "string" },
-                "description": { "type": "string" },
-                "assignee_username": { "type": "string" },
-                "status": { "type": "string" },
             }
         },
     }

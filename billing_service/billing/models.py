@@ -37,7 +37,7 @@ class Task(models.Model):
         complete = ChoiceItem('complete')
 
     id = models.BigAutoField(primary_key=True)
-    public_id = models.UUIDField(unique=True, null=True)
+    public_id = models.UUIDField(null=True, default=None)
     description = models.CharField(max_length=500, null=True)
     assignee = models.ForeignKey(to=User, on_delete=models.PROTECT, null=True)
     fee = models.PositiveIntegerField(default=0)  # при создании, kafka consumer
