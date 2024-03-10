@@ -19,17 +19,18 @@ TASKS = 'tasks'
 def dispatch_task_created(task):
     event = {
             "event_name": "TaskCreated",
-            "event_version": 1,
+            "event_version": 2,
             "event_time": str(datetime.now()),
             "producer": "auth_server",
             "data": {
                 "public_id": str(task.public_id),
                 "description": task.description,
-                "assignee_username": task.assignee.username,  # public_id
+                "jira_id": 'stub_jira_id',
+                "assignee_username": task.assignee.username,  # user_public_id
                 "status": task.status,
             },
         }
-    jsonschema.validate(event, TaskCreated.v1)
+    jsonschema.validate(event, TaskCreated.v2)
     producer.send(TASKS_STREAM, event)
 
 
