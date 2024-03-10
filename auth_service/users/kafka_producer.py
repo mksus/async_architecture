@@ -19,7 +19,7 @@ ACCOUNTS = 'accounts'
 def dispatch_account_created(user):
     event = {
             "event_name": "AccountCreated",
-            "event_version": "1",
+            "event_version": 1,
             "event_time": str(datetime.now()),
             "producer": "auth_server",
             "data": {
@@ -34,25 +34,34 @@ def dispatch_account_created(user):
     producer.send(ACCOUNTS_STREAM, event)
 
 
-def dispatch_role_changed(user):
+def dispatch_account_updated(user):
     event = {
-                "event_name": "AccountRoleChanged",
-                "data": {
-                    "username": user.username,
-                    "role": user.role,
-                },
-            }
-    producer.send(ACCOUNTS, event)
-
-
-def dispatch_account_changed(user):
-    event = {
-        "event_name": "AccountChanged",
+        "event_name": "AccountUpdated",
+        "event_version": 1,
+        "event_time": str(datetime.now()),
+        "producer": "auth_server",
         "data": {
             "username": user.username,
             "role": user.role,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "email": user.email,
         },
     }
     producer.send(ACCOUNTS_STREAM, event)
+
+
+def dispatch_role_changed(user):
+    event = {
+        "event_name": "AccountRoleChanged",
+        "event_version": 1,
+        "event_time": str(datetime.now()),
+        "producer": "auth_server",
+        "data": {
+            "username": user.username,
+            "role": user.role,
+            },
+        }
+    producer.send(ACCOUNTS, event)
+
+

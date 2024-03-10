@@ -5,6 +5,7 @@ from djchoices import ChoiceItem, DjangoChoices
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from tracker.kafka_producer import dispatch_task_created
+from uuid import uuid4
 
 
 class Task(models.Model):
@@ -14,6 +15,7 @@ class Task(models.Model):
         complete = ChoiceItem('complete')
 
     id = models.BigAutoField(primary_key=True)
+    public_id = models.UUIDField(unique=True, default=uuid4)
     description = models.CharField(max_length=500, null=True)
     assignee = models.ForeignKey(to=User, on_delete=models.PROTECT, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.open)
@@ -26,9 +28,7 @@ def task_events(sender, instance, **kwargs):
     if created:
         dispatch_task_created(instance)
     else:
-        pass
-        # previous = User.objects.get(id=instance.id)
-        # if previous.role != instance.role:
-        #     print('role_changed')
-        #     dispatch_role_changed(instance)
-        # dispatch_account_changed(instance)
+        previous = User.objects.get(id=instance.id)
+        if previous.status != Task.Status.complete and instance.status == Task.Status.complete:
+            dispatch_role_changed(instance)
+        dispatch_account_changed(instance)

@@ -1,6 +1,6 @@
 v1 = {
-    "title": "AccountCreated",
-    "description": "CUD",
+    "title": "AccountRoleChanged",
+    "description": "BE",
     "type": "object",
     "properties": {
         "event_version": { "type": "string" },
@@ -10,10 +10,7 @@ v1 = {
         "data": {
             "type": "object",
             "properties": {
-                "email": { "type": "string" },
                 "role": { "type": "string" },
-                "first_name": { "type": "string" },
-                "last_name": { "type": "string" },
                 "username": { "type": "string" },
             }
         },

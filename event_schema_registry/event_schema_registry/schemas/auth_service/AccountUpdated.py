@@ -1,7 +1,6 @@
 v1 = {
-    "title": "AccountCreated",
+    "title": "AccountUpdated",
     "description": "CUD",
-    "type": "object",
     "properties": {
         "event_version": { "type": "string" },
         "event_name": { "type": "string" },
