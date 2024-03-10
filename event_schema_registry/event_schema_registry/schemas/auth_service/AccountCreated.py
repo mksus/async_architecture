@@ -3,8 +3,8 @@ v1 = {
     "description": "CUD",
     "type": "object",
     "properties": {
-        "event_version": { "type": "string" },
-        "event_name": { "type": "string" },
+        "event_name": {"type": "string"},
+        "event_version": {"enum": [1]},
         "event_time": { "type": "string" },
         "producer": { "type": "string" },
         "data": {

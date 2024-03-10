@@ -1,7 +1,7 @@
 import json
 
 from kafka import KafkaProducer
-import event_schema_registry.schemas.auth_service.AccountCreated as reg
+from event_schema_registry.schemas.auth_service import AccountCreated, AccountUpdated, AccountRoleChanged
 import jsonschema
 from datetime import datetime
 
@@ -30,7 +30,7 @@ def dispatch_account_created(user):
                 "username": user.username,
             },
         }
-    jsonschema.validate(event, reg.v1)
+    jsonschema.validate(event, AccountCreated.v1)
     producer.send(ACCOUNTS_STREAM, event)
 
 
@@ -48,6 +48,7 @@ def dispatch_account_updated(user):
             "email": user.email,
         },
     }
+    jsonschema.validate(event, AccountUpdated.v1)
     producer.send(ACCOUNTS_STREAM, event)
 
 
@@ -62,6 +63,7 @@ def dispatch_role_changed(user):
             "role": user.role,
             },
         }
+    jsonschema.validate(event, AccountRoleChanged.v1)
     producer.send(ACCOUNTS, event)
 
 

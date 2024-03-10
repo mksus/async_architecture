@@ -49,26 +49,3 @@ def dispatch_task_updated(task: Task):
         }
     # jsonschema.validate(event, reg.v1)
     producer.send(TASKS_STREAM, event)
-
-# def dispatch_role_changed(user):
-#     event = {
-#                 "event_name": "AccountRoleChanged",
-#                 "data": {
-#                     "username": user.username,
-#                     "role": user.role,
-#                 },
-#             }
-#     producer.send(ACCOUNTS, event)
-#
-#
-# def dispatch_account_changed(user):
-#     event = {
-#         "event_name": "AccountChanged",
-#         "data": {
-#             "username": user.username,
-#             "role": user.role,
-#             "first_name": user.first_name,
-#             "last_name": user.last_name,
-#         },
-#     }
-#     producer.send(ACCOUNTS_STREAM, event)
