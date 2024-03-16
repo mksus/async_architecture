@@ -3,7 +3,7 @@ from django.db import models
 from djchoices import ChoiceItem, DjangoChoices
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from users.kafka_producer import dispatch_account_changed, dispatch_account_created, dispatch_role_changed
+from users.kafka_producer import dispatch_account_updated, dispatch_account_created, dispatch_role_changed
 
 
 class User(AbstractUser):
@@ -33,6 +33,6 @@ def update_stock(sender, instance, **kwargs):
         if previous.role != instance.role:
             print('role_changed')
             dispatch_role_changed(instance)
-        dispatch_account_changed(instance)
+        dispatch_account_updated(instance)
 
 
