@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -149,3 +150,5 @@ AUTHENTICATION_BACKENDS = [
     # Uncomment following if you want to access the admin
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+KAFKA_BROKER = os.environ.get('KAFKA_BROKER_URL') or 'localhost:9092'

@@ -18,6 +18,7 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -39,14 +40,50 @@ services:
       - broker
       - zookeeper
     build:
-      dockerfile: Dockerfile_suth_service
+      dockerfile: Dockerfile_auth_service
       context: .
     ports:
       - "8000:8000"
-    command: python3 ./auth_service/manage.py runserver 0.0.0.0:8000 --traceback
+    command: python3 ./auth_service/manage.py runserver 0.0.0.0:8000
     environment:
       TERM: 'xterm'
+      KAFKA_BROKER_URL: 'broker:29092'
     volumes:
       - type: bind
         source: ./auth_service
         target: /code/auth_service
+
+  billing_service:
+    image: billing_service
+    depends_on:
+      - broker
+      - zookeeper
+    build:
+      dockerfile: Dockerfile_billing_service
+      context: .
+    ports:
+      - "8002:8002"
+    command: python3 ./billing_service/manage.py runserver 0.0.0.0:8002
+    environment:
+      TERM: 'xterm'
+    volumes:
+      - type: bind
+        source: ./billing_service
+        target: /code/billing_service
+
+  billing_consumer:
+    image: billing_consumer
+    depends_on:
+      - broker
+      - zookeeper
+    build:
+      dockerfile: Dockerfile_billing_service
+      context: .
+    command: python3 ./billing_service/manage.py consumer_command
+    environment:
+      TERM: 'xterm'
+      KAFKA_BROKER_URL: 'broker:29092'
+    volumes:
+      - type: bind
+        source: ./billing_service
+        target: /code/billing_service

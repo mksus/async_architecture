@@ -4,9 +4,10 @@ from kafka import KafkaProducer
 from event_schema_registry.schemas.auth_service import AccountCreated, AccountUpdated, AccountRoleChanged
 import jsonschema
 from datetime import datetime
+from django.conf import settings
 
 producer = KafkaProducer(
-    bootstrap_servers=['localhost:9092'],
+    bootstrap_servers=[settings.KAFKA_BROKER],
     value_serializer=lambda m: json.dumps(m).encode('utf-8'), retries=3,
     api_version=(2, 0)
 )
@@ -63,7 +64,11 @@ def dispatch_role_changed(user):
             "role": user.role,
             },
         }
+    print('try dispatch 1')
+    print(settings.KAFKA_BROKER)
     jsonschema.validate(event, AccountRoleChanged.v1)
+    print('try dispatch 2')
     producer.send(ACCOUNTS, event)
+    print('try dispatch 3')
 
 
