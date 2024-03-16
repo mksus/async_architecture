@@ -34,8 +34,8 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
-  auth_service:
-    image: auth_service
+  auth-service:
+    image: auth-service
     depends_on:
       - broker
       - zookeeper
@@ -53,12 +53,12 @@ services:
         source: ./auth_service
         target: /code/auth_service
 
-  billing_service:
-    image: billing_service
+  billing-service:
+    image: billing-service
     depends_on:
       - broker
       - zookeeper
-      - auth_service
+      - auth-service
     build:
       dockerfile: Dockerfile_billing_service
       context: .
@@ -68,18 +68,19 @@ services:
     environment:
       TERM: 'xterm'
       KAFKA_BROKER_URL: 'broker:29092'
+      AUTH_SERVICE_HOST: 'auth-service:8000'
     volumes:
       - type: bind
         source: ./billing_service
         target: /code/billing_service
 
-  billing_consumer:
-    image: billing_consumer
+  billing-consumer:
+    image: billing-consumer
     depends_on:
       - broker
       - zookeeper
-      - auth_service
-      - billing_service
+      - auth-service
+      - billing-service
     build:
       dockerfile: Dockerfile_billing_service
       context: .
@@ -93,12 +94,13 @@ services:
         target: /code/billing_service
 
 
-  tracker_service:
-    image: tracker_service
+  tracker-service:
+    image: tracker-service
     depends_on:
       - broker
       - zookeeper
-      - auth_service
+      - auth-service
+      - billing-service
     build:
       dockerfile: Dockerfile_tracker_service
       context: .

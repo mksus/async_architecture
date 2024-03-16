@@ -8,6 +8,7 @@ import string
 import base64
 import hashlib
 import requests
+from django.conf import settings
 
 
 # Create your views here.
@@ -52,7 +53,7 @@ def auth_callback(request, *args, **kwargs):
     }
 
     response = requests.post(
-        'http://127.0.0.1:8000/o/token/',
+        f'http://{settings.AUTH_SERVICE_HOST}/o/token/',
         data=data,
     )
     print(response)
