@@ -9,7 +9,8 @@ from django.conf import settings
 producer = KafkaProducer(
     bootstrap_servers=[settings.KAFKA_BROKER],
     value_serializer=lambda m: json.dumps(m).encode('utf-8'), retries=3,
-    api_version=(2, 0)
+    api_version=(2, 0),
+    max_block_ms=2000
 )
 
 

@@ -21,15 +21,15 @@ class CreateTaskView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         assignee_queryset = User.objects.exclude(
-                role__in=[User.Role.manager.value, User.Role.admin.value]
+                role__in=[User.Role.manager, User.Role.admin]
             )
         if assignee_queryset.exists():
             total_assignees = assignee_queryset.count()
             random_index = random.randint(0, total_assignees - 1)
             assignee = assignee_queryset[random_index]
             serializer.validated_data["assignee"] = assignee
-        serializer.validated_data["fee"] = random.randint(10, 20)
-        serializer.validated_data["reward"] = random.randint(20, 40)
+        print("creating task")
+        print(serializer.validated_data)
         serializer.save()
 
 
