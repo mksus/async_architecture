@@ -25,3 +25,6 @@ complete:
 
 
 ### BILLING ###
+auth_in_billing_url:
+	echo "${TRACKER_URL}/auth_client/auth_via_provider/"
+

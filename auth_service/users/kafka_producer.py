@@ -51,6 +51,7 @@ def dispatch_account_updated(user):
         },
     }
     jsonschema.validate(event, AccountUpdated.v1)
+    print(f'before send {event}')
     producer.send(ACCOUNTS_STREAM, event)
 
 
