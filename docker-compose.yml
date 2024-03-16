@@ -58,6 +58,7 @@ services:
     depends_on:
       - broker
       - zookeeper
+      - auth_service
     build:
       dockerfile: Dockerfile_billing_service
       context: .
@@ -66,6 +67,7 @@ services:
     command: python3 ./billing_service/manage.py runserver 0.0.0.0:8002
     environment:
       TERM: 'xterm'
+      KAFKA_BROKER_URL: 'broker:29092'
     volumes:
       - type: bind
         source: ./billing_service
@@ -76,6 +78,8 @@ services:
     depends_on:
       - broker
       - zookeeper
+      - auth_service
+      - billing_service
     build:
       dockerfile: Dockerfile_billing_service
       context: .
@@ -87,3 +91,24 @@ services:
       - type: bind
         source: ./billing_service
         target: /code/billing_service
+
+
+  tracker_service:
+    image: tracker_service
+    depends_on:
+      - broker
+      - zookeeper
+      - auth_service
+    build:
+      dockerfile: Dockerfile_tracker_service
+      context: .
+    ports:
+      - "8001:8001"
+    command: python3 ./tracker_service/manage.py runserver 0.0.0.0:8001
+    environment:
+      TERM: 'xterm'
+      KAFKA_BROKER_URL: 'broker:29092'
+    volumes:
+      - type: bind
+        source: ./tracker_service
+        target: /code/tracker_service
