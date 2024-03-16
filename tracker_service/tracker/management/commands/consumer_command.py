@@ -1,6 +1,7 @@
 from kafka import KafkaConsumer
 import json
 from django.core.management import BaseCommand
+from django.conf import settings
 
 ACCOUNTS_STREAM = 'accounts_stream'
 ACCOUNTS = 'accounts'
@@ -8,7 +9,6 @@ ACCOUNTS = 'accounts'
 TASKS_STREAM = 'tasks_stream'
 TASKS = 'tasks'
 
-from django.conf import settings
 
 class Command(BaseCommand):
     help = "Start Reporting Kafka Consumer"

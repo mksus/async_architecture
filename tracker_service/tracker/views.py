@@ -11,7 +11,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ("description", "status", "assignee")
+        fields = ("public_id", "description", "status", "assignee")
+        read_only_fields = ('public_id',)
 
 
 class CreateTaskView(generics.CreateAPIView):
@@ -36,11 +37,11 @@ class CreateTaskView(generics.CreateAPIView):
 class ReassignTasksView(views.APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        opened_tasks = Task.objects.filter(status=Task.Status.open.value)
+    def post(self, request):
+        opened_tasks = Task.objects.filter(status=Task.Status.open)
         for task in opened_tasks:
             assignee_queryset = User.objects.exclude(
-                role__in=[User.Role.manager.value, User.Role.admin.value]
+                role__in=[User.Role.manager, User.Role.admin]
             )
 
             if assignee_queryset.exists():
@@ -58,18 +59,20 @@ class CompleteTaskView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        task_id = request.data.get("task_id")
+        public_id = request.data.get("public_id")
         try:
-            task = Task.objects.get(id=task_id)
+            task = Task.objects.get(public_id=public_id)
         except Task.DoesNotExist:
             return Response("Does not exist", status=404)
 
         if task.assignee != request.user:
             return Response("Can complete only owned tasks", status=403)
 
-        task.status = Task.Status.complete.value
+        task.status = Task.Status.complete
         task.save(update_fields=["status"])
-        return Response(status=200, data="ok")
+
+        serializer = TaskSerializer(task)
+        return Response(serializer.data)
 
 
 class MyTasksView(generics.ListAPIView):
