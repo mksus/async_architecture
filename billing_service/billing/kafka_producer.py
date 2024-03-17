@@ -28,12 +28,12 @@ def dispatch_transaction_created(transaction):
             "event_time": str(datetime.now()),
             "producer": "billing_service",
             "data": {
-                "public_id": transaction.public_id,
+                "public_id": str(transaction.public_id),
                 "username": transaction.user.username,
                 "description": transaction.description,
                 "credit": transaction.credit,
                 "debit": transaction.debit,
-                "billing_cycle_start_date": transaction.billing_cycle.start_date, # using like billing cycle public slug
+                "billing_cycle_start_date": str(transaction.billing_cycle.start_date), # using like billing cycle public slug
                 "type": transaction.type,
             },
         }

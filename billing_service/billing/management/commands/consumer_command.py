@@ -12,7 +12,7 @@ from django.conf import settings
 import random
 from django.db import DatabaseError, transaction
 from billing.models import Transaction, BillingCycle
-from billing.kafke_producer import dispatch_transaction_created
+from billing.kafka_producer import dispatch_transaction_created
 
 ACCOUNTS_STREAM = 'accounts_stream'
 ACCOUNTS = 'accounts'
@@ -89,8 +89,6 @@ class Command(BaseCommand):
                 except User.DoesNotExist:
                     User.objects.create(**message.value["data"])
 
-
-
             elif event_name == "TaskCreated" and event_version == 2:
                 try:
                     print('TaskCreated v2')
@@ -103,8 +101,8 @@ class Command(BaseCommand):
 
                     assignee = User.objects.get(username=data['assignee_username'])
 
-                    fee = random.randint(10, 20),
-                    reward = random.randint(20, 40),
+                    fee = random.randint(10, 20)
+                    reward = random.randint(20, 40)
                     with transaction.atomic():
                         # создаем задачу с ценами
                         task = Task.objects.create(
@@ -119,7 +117,7 @@ class Command(BaseCommand):
                         task.save()
 
                         # тут будет Exception, если он один или их много
-                        billing_cycle = BillingCycle.objects.get(active=True)
+                        billing_cycle = BillingCycle.objects.get(is_active=True)
 
                         tr = Transaction.objects.create(
                             user = assignee,
@@ -128,6 +126,8 @@ class Command(BaseCommand):
                             debit = task.fee,
                             billing_cycle = billing_cycle
                         )
+
+                        dispatch_transaction_created(tr)
 
                         # User.update_balance()
 
@@ -165,7 +165,6 @@ class Command(BaseCommand):
                         )
                         print(tr)
                         # User.update_balance()
-                        # Todo dispatch event transaction created
                         dispatch_transaction_created(tr)
                 except Exception as e:
                     print(e)
@@ -182,7 +181,7 @@ class Command(BaseCommand):
                         task.save()
                         reward = task.reward
 
-                        billing_cycle = BillingCycle.objects.get(active=True)
+                        billing_cycle = BillingCycle.objects.get(is_active=True)
 
                         tr = Transaction.objects.create(
                             user=task.assignee,
