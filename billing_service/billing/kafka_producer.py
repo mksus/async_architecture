@@ -1,7 +1,7 @@
 import json
 
 from kafka import KafkaProducer
-from event_schema_registry.schemas.billing_service import TransactionCreated, BillingCycleCreated
+from event_schema_registry.schemas.billing_service import TransactionCreated, BillingCycleCreated, BillingTaskUpdated, BalanceChanged
 import jsonschema
 from datetime import datetime
 from django.conf import settings
@@ -18,7 +18,10 @@ ACCOUNTS_STREAM = 'accounts_stream'
 ACCOUNTS = 'accounts'
 
 TRANSACTIONS = 'transactions'
+
+BILLING_BALANCE = 'billing_balance'
 BILLING_CYCLE = 'billing_cycle'
+BILLING_TASKS = 'billing_tasks'
 
 
 def dispatch_transaction_created(transaction):
@@ -55,3 +58,39 @@ def dispatch_new_billing_cycle(billing_cycle):
 
     jsonschema.validate(event, BillingCycleCreated.v1)
     producer.send(BILLING_CYCLE, event)
+
+
+def dispatch_billing_task_updated(task):
+    print('billing task updated being dispatched')
+    event = {
+        "event_name": "BillingTaskUpdated",
+        "event_version": 1,
+        "event_time": str(datetime.now()),
+        "producer": "billing_service",
+        "data": {
+            "public_id": str(task.public_id),
+            "fee": task.fee,
+            "reward": task.reward,
+        },
+    }
+
+    jsonschema.validate(event, BillingTaskUpdated.v1)
+    producer.send(BILLING_TASKS, event)
+
+
+def dispatch_balance_changed(user, billing_cycle_start_date):
+    print('balance updated being dispatched')
+    event = {
+        "event_name": "BalanceChanged",
+        "event_version": 1,
+        "event_time": str(datetime.now()),
+        "producer": "billing_service",
+        "data": {
+            "username": user.username
+            "balance": user.balance,
+            "billing_cycle_start_date": billing_cycle_start_date,
+        },
+    }
+
+    jsonschema.validate(event, BalanceChanged.v1)
+    producer.send(BILLING_BALANCE, event)

@@ -95,6 +95,27 @@ services:
         source: ./tracker_service
         target: /code/tracker_service
 
+  tracker-consumer:
+    image: analytics-consumer
+    depends_on:
+      - broker
+      - zookeeper
+      - auth-service
+      - billing-service
+      - tracker-service
+    build:
+      dockerfile: Dockerfile_tracker_service
+      context: .
+    command: python3 ./tracker_service/manage.py consumer_command
+    environment:
+      TERM: 'xterm'
+      KAFKA_BROKER_URL: 'broker:29092'
+    volumes:
+      - type: bind
+        source: ./tracker_service
+        target: /code/tracker_service
+
+
   billing-consumer:
     image: billing-consumer
     depends_on:

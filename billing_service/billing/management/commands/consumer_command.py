@@ -12,7 +12,7 @@ from django.conf import settings
 import random
 from django.db import DatabaseError, transaction
 from billing.models import Transaction, BillingCycle
-from billing.kafka_producer import dispatch_transaction_created
+from billing.kafka_producer import dispatch_transaction_created, dispatch_billing_task_updated
 
 ACCOUNTS_STREAM = 'accounts_stream'
 ACCOUNTS = 'accounts'
@@ -46,27 +46,26 @@ class Command(BaseCommand):
 
             #  по-хорошему, любые манипуляции с полями должны быть под try-except,
             #  пока не хватает сил/времени на переделку, считаем, что все события их содержат
+            try:
 
-            event_name = value.get("event_name")
-            event_version = value.get("event_version")
-            data = value["data"]
-            print("Received message: {}".format(value))
+                event_name = value.get("event_name")
+                event_version = value.get("event_version")
+                data = value["data"]
+                print("Received message: {}".format(value))
 
-            # for users username is public_id
+                # for users username is public_id
 
-            # CUD events
-            if event_name == "AccountCreated":
-                try:
-                    jsonschema.validate(value, AccountCreated.v1)
-                    u = User.objects.create(**data)
-                    print(u)
-                    u.save()
-                except Exception as e:
-                    print(e)
+                # CUD events
+                if event_name == "AccountCreated":
 
-            elif event_name == "AccountUpdated":
-                username = data["username"]
-                try:
+                        jsonschema.validate(value, AccountCreated.v1)
+                        u = User.objects.create(**data)
+                        print(u)
+                        u.save()
+
+
+                elif event_name == "AccountUpdated":
+                    username = data["username"]
                     jsonschema.validate(value, AccountUpdated.v1)
                     user = User.objects.get(username=username)
                     user.first_name = data["first_name"]
@@ -74,11 +73,10 @@ class Command(BaseCommand):
                     user.role = data["role"]
                     user.save(update_fields=["role", "first_name", "last_name"])
                     print('AccountUpdated ok')
-                except User.DoesNotExist:
-                    User.objects.create(**data)
-            # Business events
-            elif event_name == "AccountRoleChanged":
-                try:
+
+                # Business events
+                elif event_name == "AccountRoleChanged":
+
                     jsonschema.validate(value, AccountRoleChanged.v1)
                     new_role = data["role"]
                     username = data["username"]
@@ -86,11 +84,10 @@ class Command(BaseCommand):
                     user.role = new_role
                     user.save(update_fields=["role"])
                     print('AccountRoleChanged ok')
-                except User.DoesNotExist:
-                    User.objects.create(**message.value["data"])
 
-            elif event_name == "TaskCreated" and event_version == 2:
-                try:
+
+                elif event_name == "TaskCreated" and event_version == 2:
+
                     print('TaskCreated v2')
                     jsonschema.validate(value, TaskCreated.v2)
 
@@ -116,6 +113,9 @@ class Command(BaseCommand):
                         print(task)
                         task.save()
 
+                        # событие для аналитики, чтобы собрать всю инфу по задаче
+                        dispatch_billing_task_updated(task)
+
                         # тут будет Exception, если он один или их много
                         billing_cycle = BillingCycle.objects.get(is_active=True)
 
@@ -130,16 +130,11 @@ class Command(BaseCommand):
                         dispatch_transaction_created(tr)
 
                         # User.update_balance()
+                        # dispatch_balance_changed(user, billing_cycle.start_date)
 
-                        # TODO dispatch event - Task Assigned (price)
+                elif event_name == "TaskReassigned":
+                    print('before try')
 
-                except Exception as e:
-                    # TODO Складываем в DB сломавшееся событие
-                    print(e)
-
-            elif event_name == "TaskReassigned":
-                print('before try')
-                try:
                     jsonschema.validate(value, TaskReassigned.v1)
                     with transaction.atomic():
                         # создаем задачу с ценами
@@ -164,12 +159,14 @@ class Command(BaseCommand):
                             billing_cycle=billing_cycle
                         )
                         print(tr)
+
                         # User.update_balance()
+                        # dispatch_balance_changed(user, billing_cycle.start_date)
+
                         dispatch_transaction_created(tr)
-                except Exception as e:
-                    print(e)
-            elif event_name == "TaskCompleted":
-                try:
+
+                elif event_name == "TaskCompleted":
+
                     jsonschema.validate(value, TaskCompleted.v1)
 
                     with transaction.atomic():
@@ -192,17 +189,27 @@ class Command(BaseCommand):
                         )
                         print(tr)
 
+                        dispatch_transaction_created(tr)
+
                         # User.update_balance()
+                        # dispatch_balance_changed(user, billing_cycle.start_date)
 
                         # TODO dispatch event - Task Complete (price)
 
-                except Exception as e:
-                    print(e)
-                    # store exceptions to special database model
-                    # - exception_name
-                    # - exception_text
-                    # - event_data{}
+            except Exception as e:
+                print(e)
+                """
+                аналогично analytics consumer
+                
+                def is_error_retryable(e):
+                    # some errors classification
+                    return False
 
-                    # raise alert / send to sentry
-                    # дальше можно разбирать вручную, что не учли
+                DeadLetterLog.objects.create(
+                  error=e,
+                  event =message.value,
+                  is_retryable=is_error_retryable(e),
+                )
+                
+                """
 

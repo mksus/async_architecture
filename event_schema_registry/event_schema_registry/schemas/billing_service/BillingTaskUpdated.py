@@ -1,5 +1,5 @@
 v1 = {
-    "title": "BalanceChanged",
+    "title": "BillingTaskUpdated",
     "description": "BE",
     "type": "object",
     "properties": {
@@ -10,9 +10,9 @@ v1 = {
         "data": {
             "type": "object",
             "properties": {
-                "username": { "type": "string" },
-                "balance": { "type": "integer" },
-                "billing_cycle_start_date": { "type": "string" }
+                "public_id": { "type": "string" },
+                "fee": { "type": "integer" },
+                "reward": { "type": "integer" },
             }
         },
     }
