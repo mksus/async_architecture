@@ -102,6 +102,7 @@ services:
       - zookeeper
       - auth-service
       - billing-service
+      - tracker-service
     build:
       dockerfile: Dockerfile_billing_service
       context: .

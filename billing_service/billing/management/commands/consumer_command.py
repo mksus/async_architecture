@@ -8,6 +8,8 @@ from event_schema_registry.schemas.auth_service import AccountCreated, AccountUp
 from event_schema_registry.schemas.tracker_service import TaskCreated, TaskCompleted
 import jsonschema
 from django.core.management import BaseCommand
+import time
+from django.conf import settings
 
 ACCOUNTS_STREAM = 'accounts_stream'
 ACCOUNTS = 'accounts'
@@ -15,7 +17,6 @@ ACCOUNTS = 'accounts'
 TASKS_STREAM = 'tasks_stream'
 TASKS = 'tasks'
 
-from django.conf import settings
 
 class Command(BaseCommand):
     help = "Start Reporting Kafka Consumer"
@@ -23,10 +24,12 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
 
         print(settings.KAFKA_BROKER)
+        print('steeping 10 sec')
+        time.sleep(10)
 
         consumer = KafkaConsumer(
             bootstrap_servers=[settings.KAFKA_BROKER],
-            group_id='async_arc',
+            group_id='billing_service',
             value_deserializer=lambda m: json.loads(m.decode('utf-8')),
             api_version=(2, 0)
         )

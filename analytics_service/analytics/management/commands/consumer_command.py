@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
         consumer = KafkaConsumer(
             bootstrap_servers=[settings.KAFKA_BROKER],
-            group_id='async_arc',
+            group_id='analytice_service',
             value_deserializer=lambda m: json.loads(m.decode('utf-8')),
             api_version=(2, 0)
         )
