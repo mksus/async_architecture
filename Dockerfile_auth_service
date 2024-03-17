@@ -1,0 +1,25 @@
+FROM python:3.11
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV KAFKA_BROKER_URL='broker:29092'
+
+ENV project_dir=/code
+
+WORKDIR /code
+
+WORKDIR ${project_dir}
+
+
+COPY ./auth_service ${project_dir}/auth_service/
+
+COPY ./event_schema_registry ${project_dir}/event_schema_registry/
+
+# все в один env
+RUN pip3 install --no-cache-dir -r ./auth_service/requirements.txt
+
+# туда же registry
+RUN pip3 install --no-cache-dir ./event_schema_registry
+
+CMD python3 ./auth_service/manage.py runserver 0.0.0.0:8002
+#CMD ls -lta

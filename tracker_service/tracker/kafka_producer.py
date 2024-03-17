@@ -1,14 +1,16 @@
 import json
 
 from kafka import KafkaProducer
-from event_schema_registry.schemas.tracker_service import TaskCreated, TaskCompleted
+from event_schema_registry.schemas.tracker_service import TaskCreated, TaskCompleted, TaskReassigned
 import jsonschema
 from datetime import datetime
+from django.conf import settings
 
 producer = KafkaProducer(
-    bootstrap_servers=['localhost:9092'],
+    bootstrap_servers=[settings.KAFKA_BROKER],
     value_serializer=lambda m: json.dumps(m).encode('utf-8'), retries=3,
-    api_version=(2, 0)
+    api_version=(2, 0),
+    max_block_ms=2000
 )
 
 
@@ -50,7 +52,7 @@ def dispatch_task_completed(task):
 
     try:
         jsonschema.validate(event, TaskCompleted.v1)
-        producer.send(TASKS_STREAM, event)
+        producer.send(TASKS, event)
     except Exception as e:
         # по-хорошему, здесь можно прикрутить outbox_pattern на случай ошибок брокера
 
@@ -59,4 +61,23 @@ def dispatch_task_completed(task):
         # чтобы можно было их потом доотправить
 
         # такой подход может заменить также outbox_pattern на маленьком объеме (наверно, это и есть logtailing)
+        print(e)
+
+
+def dispatch_task_reassigned(task):
+    event = {
+        "event_name": "TaskReassigned",
+        "event_version": 1,
+        "event_time": str(datetime.now()),
+        "producer": "auth_server",
+        "data": {
+            "public_id": str(task.public_id),
+            "assignee_username": task.assignee.username,  # public_id
+        },
+    }
+
+    try:
+        jsonschema.validate(event, TaskReassigned.v1)
+        producer.send(TASKS, event)
+    except Exception as e:
         print(e)

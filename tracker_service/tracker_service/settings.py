@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -100,8 +101,10 @@ REST_FRAMEWORK = {
     )
 }
 
+AUTH_SERVICE_HOST = os.environ.get('AUTH_SERVICE_HOST') or 'auth-service:8000'
+
 OAUTH2_PROVIDER = {
-    'RESOURCE_SERVER_INTROSPECTION_URL': 'http://localhost:8000/o/introspect/',
+    'RESOURCE_SERVER_INTROSPECTION_URL': f'http://{AUTH_SERVICE_HOST}/o/introspect/',
     'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('r5XNhCeSKGkBZ8ihe01JXz1uCJfaStGYSXaH4Xpw', 'ZSMW6QxhtCUPhpLFV6QOzQkKW3rrFs7SSZL8R26uUDxdZN1VAmf6KhXG9jkgea2QZS3FMH7MHc72Y2tH8moHK4UprlNnQm0vfzVSHuo2avPE6yuvk698EqxnYPEFnOYf'),
 }
 
@@ -147,3 +150,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = True
 AUTH_USER_MODEL = 'auth_client.User'
+
+KAFKA_BROKER = os.environ.get('KAFKA_BROKER_URL') or 'localhost:9092'

@@ -23,6 +23,7 @@ class Transaction(models.Model):
         company = ChoiceItem('company')
 
     id = models.BigAutoField(primary_key=True)
+    public_id = models.UUIDField(null=True, default=uuid4())
     user = models.ForeignKey(to=User, on_delete=models.PROTECT)
     description = models.CharField(max_length=500, null=True)
     credit = models.PositiveIntegerField(default=0)

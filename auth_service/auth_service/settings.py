@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-+fcpf2b-xlkcnxs9gv(0t%d(qn-pkra_j&o4g8k(%ky0zfc@oz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTHENTICATION_BACKENDS = [
     'oauth2_provider.backends.OAuth2Backend',
@@ -135,3 +136,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 LOGIN_URL = '/users/accounts/login/'
 CORS_ORIGIN_ALLOW_ALL = True
+
+KAFKA_BROKER = os.environ.get('KAFKA_BROKER_URL') or 'localhost:9092'

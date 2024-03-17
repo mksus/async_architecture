@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from tracker.models import Task
 from auth_client.models import User
 import random
+from tracker.kafka_producer import dispatch_task_reassigned, dispatch_task_completed
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -11,7 +12,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ("description", "status", "assignee")
+        fields = ("public_id", "description", "status", "assignee")
+        read_only_fields = ('public_id',)
 
 
 class CreateTaskView(generics.CreateAPIView):
@@ -21,26 +23,26 @@ class CreateTaskView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         assignee_queryset = User.objects.exclude(
-                role__in=[User.Role.manager.value, User.Role.admin.value]
+                role__in=[User.Role.manager, User.Role.admin]
             )
         if assignee_queryset.exists():
             total_assignees = assignee_queryset.count()
             random_index = random.randint(0, total_assignees - 1)
             assignee = assignee_queryset[random_index]
             serializer.validated_data["assignee"] = assignee
-        serializer.validated_data["fee"] = random.randint(10, 20)
-        serializer.validated_data["reward"] = random.randint(20, 40)
+        print("creating task")
+        print(serializer.validated_data)
         serializer.save()
 
 
 class ReassignTasksView(views.APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        opened_tasks = Task.objects.filter(status=Task.Status.open.value)
+    def post(self, request):
+        opened_tasks = Task.objects.filter(status=Task.Status.open)
         for task in opened_tasks:
             assignee_queryset = User.objects.exclude(
-                role__in=[User.Role.manager.value, User.Role.admin.value]
+                role__in=[User.Role.manager, User.Role.admin]
             )
 
             if assignee_queryset.exists():
@@ -49,6 +51,7 @@ class ReassignTasksView(views.APIView):
                 assignee = assignee_queryset[random_index]
                 task.assignee = assignee
                 task.save()
+                dispatch_task_reassigned(task)
 
         serializer = TaskSerializer(opened_tasks, many=True)
         return Response(serializer.data)
@@ -58,18 +61,22 @@ class CompleteTaskView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        task_id = request.data.get("task_id")
+        public_id = request.data.get("public_id")
         try:
-            task = Task.objects.get(id=task_id)
+            task = Task.objects.get(public_id=public_id)
         except Task.DoesNotExist:
             return Response("Does not exist", status=404)
 
         if task.assignee != request.user:
             return Response("Can complete only owned tasks", status=403)
 
-        task.status = Task.Status.complete.value
+        task.status = Task.Status.complete
         task.save(update_fields=["status"])
-        return Response(status=200, data="ok")
+
+        dispatch_task_completed(task)
+
+        serializer = TaskSerializer(task)
+        return Response(serializer.data)
 
 
 class MyTasksView(generics.ListAPIView):
