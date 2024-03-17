@@ -74,26 +74,6 @@ services:
         source: ./billing_service
         target: /code/billing_service
 
-  billing-consumer:
-    image: billing-consumer
-    depends_on:
-      - broker
-      - zookeeper
-      - auth-service
-      - billing-service
-    build:
-      dockerfile: Dockerfile_billing_service
-      context: .
-    command: python3 ./billing_service/manage.py consumer_command
-    environment:
-      TERM: 'xterm'
-      KAFKA_BROKER_URL: 'broker:29092'
-    volumes:
-      - type: bind
-        source: ./billing_service
-        target: /code/billing_service
-
-
   tracker-service:
     image: tracker-service
     depends_on:
@@ -114,3 +94,43 @@ services:
       - type: bind
         source: ./tracker_service
         target: /code/tracker_service
+
+  billing-consumer:
+    image: billing-consumer
+    depends_on:
+      - broker
+      - zookeeper
+      - auth-service
+      - billing-service
+    build:
+      dockerfile: Dockerfile_billing_service
+      context: .
+    command: python3 ./billing_service/manage.py consumer_command
+    environment:
+      TERM: 'xterm'
+      KAFKA_BROKER_URL: 'broker:29092'
+    volumes:
+      - type: bind
+        source: ./billing_service
+        target: /code/billing_service
+
+
+  analytics-consumer:
+    image: analytics-consumer
+    depends_on:
+      - broker
+      - zookeeper
+      - auth-service
+      - billing-service
+      - tracker-service
+    build:
+      dockerfile: Dockerfile_analytics_service
+      context: .
+    command: python3 ./analytics_service/manage.py consumer_command
+    environment:
+      TERM: 'xterm'
+      KAFKA_BROKER_URL: 'broker:29092'
+    volumes:
+      - type: bind
+        source: ./analytics_service
+        target: /code/analytics_service

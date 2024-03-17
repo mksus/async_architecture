@@ -11,15 +11,15 @@ WORKDIR /code
 WORKDIR ${project_dir}
 
 
-COPY ./billing_service ${project_dir}/billing_service/
+COPY ./analytics_service ${project_dir}/analytics_service/
 
 COPY ./event_schema_registry ${project_dir}/event_schema_registry/
 
 # все в один env
-RUN pip3 install --no-cache-dir -r ./billing_service/requirements.txt
+RUN pip3 install --no-cache-dir -r ./analytics_service/requirements.txt
 
 # туда же registry
 RUN pip3 install --no-cache-dir ./event_schema_registry
 
-CMD python3 ./billing_service/manage.py runserver 0.0.0.0:8000
+CMD python3 ./analytics_service/manage.py runserver 0.0.0.0:0.0.0.0:8003
 #CMD ls -lta

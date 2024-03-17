@@ -21,7 +21,7 @@ reassign:
 	curl -X POST ${TRACKER_URL}/tracker/reassign/ --header "Authorization: Bearer ${TRACKER_TOKEN}"
 
 complete:
-	curl -X POST ${TRACKER_URL}/tracker/complete/ --header "Authorization: Bearer ${TRACKER_TOKEN}" --form public_id="b85b7d8b-4b72-40a4-bd7b-d1ed27f824bb"
+	curl -X POST ${TRACKER_URL}/tracker/complete/ --header "Authorization: Bearer ${TRACKER_TOKEN}" --form public_id="1045df49-c8ea-48c5-be30-33b57f89dd22"
 
 
 ### BILLING ###

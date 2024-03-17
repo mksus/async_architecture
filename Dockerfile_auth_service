@@ -21,5 +21,5 @@ RUN pip3 install --no-cache-dir -r ./auth_service/requirements.txt
 # туда же registry
 RUN pip3 install --no-cache-dir ./event_schema_registry
 
-CMD python3 ./auth_service/manage.py runserver 8002 --traceback
+CMD python3 ./auth_service/manage.py runserver 0.0.0.0:8002
 #CMD ls -lta
