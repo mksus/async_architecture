@@ -3,13 +3,16 @@ import json
 from auth_client.models import User
 from billing.models import Task, Transaction
 
-import event_schema_registry.schemas.auth_service.AccountCreated as account_created_registry
 from event_schema_registry.schemas.auth_service import AccountCreated, AccountUpdated, AccountRoleChanged
-from event_schema_registry.schemas.tracker_service import TaskCreated, TaskCompleted
+from event_schema_registry.schemas.tracker_service import TaskCreated, TaskCompleted, TaskReassigned
 import jsonschema
 from django.core.management import BaseCommand
 import time
 from django.conf import settings
+import random
+from django.db import DatabaseError, transaction
+from billing.models import Transaction, BillingCycle
+from billing.kafke_producer import dispatch_transaction_created
 
 ACCOUNTS_STREAM = 'accounts_stream'
 ACCOUNTS = 'accounts'
@@ -73,7 +76,6 @@ class Command(BaseCommand):
                     print('AccountUpdated ok')
                 except User.DoesNotExist:
                     User.objects.create(**data)
-
             # Business events
             elif event_name == "AccountRoleChanged":
                 try:
@@ -87,20 +89,7 @@ class Command(BaseCommand):
                 except User.DoesNotExist:
                     User.objects.create(**message.value["data"])
 
-            elif event_name == "TaskCreated" and event_version == 1:
-                print('TaskCreated v1')
-                try:
-                    jsonschema.validate(value, TaskCreated.v1)
-                    assignee = User.objects.get(username=data['assignee_username'])
-                    u = Task.objects.create(
-                        description=data['descriptions'],
-                        status=data['status'],
-                        assignee=assignee,
-                    )
-                    print(u)
-                    u.save()
-                except Exception as e:
-                    print(e)
+
 
             elif event_name == "TaskCreated" and event_version == 2:
                 try:
@@ -113,33 +102,100 @@ class Command(BaseCommand):
                         raise Exception('description contains invalid symbol')
 
                     assignee = User.objects.get(username=data['assignee_username'])
-                    t = Task.objects.create(
-                        public_id=data['public_id'],
-                        description=data['description'],
-                        status=data['status'],
-                        assignee=assignee,
-                    )
-                    print(t)
-                    t.save()
+
+                    fee = random.randint(10, 20),
+                    reward = random.randint(20, 40),
+                    with transaction.atomic():
+                        # создаем задачу с ценами
+                        task = Task.objects.create(
+                            public_id=data['public_id'],
+                            description=data['description'],
+                            status=data['status'],
+                            assignee=assignee,
+                            fee=fee,
+                            reward=reward,
+                        )
+                        print(task)
+                        task.save()
+
+                        # тут будет Exception, если он один или их много
+                        billing_cycle = BillingCycle.objects.get(active=True)
+
+                        tr = Transaction.objects.create(
+                            user = assignee,
+                            description = 'Списание денег за ассайн задачи при создании',
+                            credit = 0,
+                            debit = task.fee,
+                            billing_cycle = billing_cycle
+                        )
+
+                        # User.update_balance()
+
+                        # TODO dispatch event - Task Assigned (price)
+
                 except Exception as e:
+                    # TODO Складываем в DB сломавшееся событие
                     print(e)
 
+            elif event_name == "TaskReassigned":
+                print('before try')
+                try:
+                    jsonschema.validate(value, TaskReassigned.v1)
+                    with transaction.atomic():
+                        # создаем задачу с ценами
+                        task = Task.objects.get(
+                            public_id=data['public_id'],
+                        )
+
+                        assignee = User.objects.get(username=data['assignee_username'])
+                        task.assignee = assignee
+
+                        print(task)
+                        task.save()
+
+                        # тут будет Exception, если он один или их много
+                        billing_cycle = BillingCycle.objects.get(is_active=True)
+
+                        tr = Transaction.objects.create(
+                            user=assignee,
+                            description='Списание денег за ассайн задачи при реассайне',
+                            credit=0,
+                            debit=task.fee,
+                            billing_cycle=billing_cycle
+                        )
+                        print(tr)
+                        # User.update_balance()
+                        # Todo dispatch event transaction created
+                        dispatch_transaction_created(tr)
+                except Exception as e:
+                    print(e)
             elif event_name == "TaskCompleted":
                 try:
                     jsonschema.validate(value, TaskCompleted.v1)
-                    task = Task.objects.get(public_id=data['public_id'])
 
-                    # start transaction
-                    # draft
-                    task.status = Task.Status.complete
-                    task.save()
+                    with transaction.atomic():
+                        task = Task.objects.get(public_id=data['public_id'])
 
-                    # Transaction.objects.create(description=f'')
-                    # User.get(assignee_username)
+                        # start transaction
+                        # draft
+                        task.status = Task.Status.complete
+                        task.save()
+                        reward = task.reward
 
-                    # User.update_balance()
+                        billing_cycle = BillingCycle.objects.get(active=True)
 
-                    # commit transaction
+                        tr = Transaction.objects.create(
+                            user=task.assignee,
+                            description='Начисление денег за ассайн',
+                            credit=reward,
+                            debit=0,
+                            billing_cycle=billing_cycle
+                        )
+                        print(tr)
+
+                        # User.update_balance()
+
+                        # TODO dispatch event - Task Complete (price)
 
                 except Exception as e:
                     print(e)

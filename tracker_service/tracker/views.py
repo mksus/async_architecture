@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from tracker.models import Task
 from auth_client.models import User
 import random
+from tracker.kafka_producer import dispatch_task_reassigned, dispatch_task_completed
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -50,6 +51,7 @@ class ReassignTasksView(views.APIView):
                 assignee = assignee_queryset[random_index]
                 task.assignee = assignee
                 task.save()
+                dispatch_task_reassigned(task)
 
         serializer = TaskSerializer(opened_tasks, many=True)
         return Response(serializer.data)
@@ -70,6 +72,8 @@ class CompleteTaskView(views.APIView):
 
         task.status = Task.Status.complete
         task.save(update_fields=["status"])
+
+        dispatch_task_completed(task)
 
         serializer = TaskSerializer(task)
         return Response(serializer.data)

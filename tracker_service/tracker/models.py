@@ -28,6 +28,7 @@ def task_events(sender, instance, **kwargs):
     if created:
         dispatch_task_created(instance)
     else:
-        previous = Task.objects.get(id=instance.id)
-        if previous.status != Task.Status.complete and instance.status == Task.Status.complete:
-            dispatch_task_completed(instance)
+        pass
+        # task conmpleted - задача бизнес-логики, ее правильнее отправлять во view
+        # здесь (в сигнале на изменение модели) можно было бы отправлять CUD TaskUpdated
+
